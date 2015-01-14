@@ -1,0 +1,105 @@
+****************************
+** Server Software Report **
+**     Nina Williams      **
+**          64476         **
+****************************
+
+!! **** CLIENT PROXY **** !!
+
+TO RUN: stpd <port> -c <svrhost> <svrport>
+
+
+1. Differences between my program and the basic proxy server
+
+Created a dynamic array of structs, which contains all the details for each connection.
+The structure contains requestNo, host, port, cID, clientReq (another array) and a mutex.
+RequestNo counts the number of requests for that connection. Host and port are the host:port pair.
+cID is the connection ID, or socket descriptor. ClientReq is an array that acts as a table - each index 
+represents the requestID, and the element at that position is the corresponding client ID. 
+The mutex is to lock the information of that specific connection. 
+
+Other global variables: MAX_CONN (total number of current connections, starts out as 1 but increments with
+new connections), mutex mCtrl (protects the whole of the connarg array), two condition variables (used when creating or editing
+existing connections), conArray (the array, or list, of connections), sservHost and sservPort (the host and port of the server proxy).
+
+New Functions: 
+initialiseConnectionArray - for each element in the conArray, set the request number to -1 to indicate that the connection
+is not in use. This is just to make the testing in the request function easier. 
+createConnection - initialises each of the variables in struct with the variables passed to it.
+
+Functions that have been edited (those that do not appear here have not been edited): 
+main:- 
+1. Initialise mutexes and condition variables
+2. Store the host and port from the arguments passed to the program
+3. Initialise conArray
+
+request:- 
+1. Changed sprintf() to store the whole url instead of just the path; seemed to get an error when only using the path. 
+2. Changed first strcat() to use 'keep alive' instead of 'close'. 
+3. In the first while loop: 
+	a. On the first run of the loop, carry out the connection test (no need to test each time the while loop runs - this will increment counter and 
+	produce errors). This is done using test (as a boolean).
+	b. First test is the connection array is empty or not. If it is empty, initialise the array.
+		i. Initialising the array is protected by a mutex - this mutex is the one that protects the entire connection array. We set server, lock the mutex and then use a timed wait. I don't think using a timedwait
+		was the best way to implement this, but the program seemingly works. If I were to use condition variables I wasn't sure what condition must be satisfied before the code can continue. 
+		ii. After the wait is over, re-check to see if the array has been initialised in the wait, if so, continue. 
+		iii. Create the connection and unlock mutex then broadcast. 
+	c. If the array isn't empty, check existing connections in the array to see if there is a matching host:port pair. 
+		i. If there is a pair, lock the mutex specific to that connection (we don't want to block the whole array). 
+		ii. Incrememnt requestNo, store the client ID, set server to be the stored cID, then unlock and broadcast.
+	d. matchFound is only reached if b and c aren't successful. i.e. if there are existing connections but no matching connection, then
+	create a new connection.
+		i. Initialise server (with the same test as has been provided), find the next available position in the array (only really necessary if you 
+		set the size of the starting array to be bigger than 1) then lock the array mutex. 
+		ii. If the array is full, then reallocate memory. If allocating memory wasn't successful then free up the memory and exit. 
+		iii. If the array isn't full, then create a new connection. 
+		
+	e. Lock the rest of the while loop after the test, using the mutex for that specific connection for the request. 
+	f. Used TCPreadline to retrive the response ID and save it into resid.
+	g. If any of the three tests (TCPreadline and HTTPreadheader) fail, then unlock the mutex and broadcast. If they all succeed, then unlock the mutex, broadcast then break.
+4. Since resID is hexadecimal, use strtol to convert to long int. 
+5. Look up the client ID for response ID 'x' and set client to be that client ID (i.e. compare the response ID to the request ID and see which client sent the request.)
+6. Chunked: For handling chunks I inserted a TCPreadline function to retrieve the ID of the chunk. 
+
+Testing:
+1. With each request for the same host:port pair, the request/response ID increments. With a different request, the program recognises the difference and creates a new connection, 
+the request/response ID starts from 0 again. 
+2. The program seemingly handles requests sent at the same time as others (from different clients). Using a friends computer we were able to send two requests at the same 
+time to test the robustness of each of our programs. 
+3. The program handles chunked requests, though I found it difficult to test this thoroughly. 
+
+Notes: The connection array is unlimited but the array within each struct isn't. I ran out of time to change it
+but essentially all I'd need to do is change it from an array to a linked list. I could use a dynamic array, like I did for the connection array,
+but if a request has been fulfilled, it would be better to remove the request/client pair from the list, which would be difficult in the dynamic array.  
+
+
+2. Evaluation of the STPD protocol compared with HTTP, with and without pipelining
+and with SPDY. 
+
+STPD provides better functionality than HTTP but not as well as SPDY. 
+HTTP without pipelining normally sends a request and waits for the response
+before sending another request. With pipelining, multiple requests can be
+sent, but each response must still be sent in order. The downside of this
+is if one of the responses takes a long time to send back for whatever
+reason, this will block the rest of the responses and slow down the whole
+process.
+STPD allows for multiple requests to be sent and for the responses to be 
+sent back in any order. There are still some downsides to this, and most 
+have been addressed by SPDY.
+SPDY's responses do not have to arrive in orderm like STPD. However, SPDY
+also allows prioritised requests which hints at the server which
+requests should take priority. It also compresses headers which allow for
+faster processing. It is designed for minimal latency. Downside of SPDY is
+that it only works with https, due to their TLS layer in their system. The
+TLS layer also can cause latency due to encryption/decryption, but does allow
+for better security. 
+There are some times when SPDY isn't any better than HTTP. If the website has to
+be converted from HTTP into HTTPS to support SPDY, then you may not get any distinct 
+improvement on performance due to additional SSL handshake time. 
+Performance for SPDY can also be no better if there are too many domains, when HTTP
+is not the bottleneck (e.g. when there are restrictions on download order), when round-trip-time
+(RTT) is low, or when the resource in a page is very small. 
+Since STPD doesn't have the TLS layer, there may be some advantage over SPDY
+- it may not be as secure, but without the TLS slowing the process down with 
+encryption/decryption, STPD may come out on top (ignoring some of the other benefits
+of SPDY), particularly if the site is HTTP and not HTTPS. 

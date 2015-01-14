@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 15.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="590.053px" height="375px" viewBox="0 0 590.053 375" enable-background="new 0 0 590.053 375" xml:space="preserve">
+
+	<g id="spoon" transform="translate(180,250),rotate(-30)">  
+		<ellipse cx="0" cy="00" rx="15" ry="20" style="fill:#C87533;stroke-width:2">
+		<animateTransform attributeName="transform" type="rotate(0,0)" 
+				values="0;360" repeatCount="indefinite" fill="freeze"/> 
+		</ellipse>
+		<line x1="0" y1="0" x2="5" y2="130" style="stroke:#C87533;stroke-width:5;">
+		<animateTransform attributeName="transform" type="rotate(0,0)" 
+				values="0;360" repeatCount="indefinite" fill="freeze"/> 
+				</line>
+		<path d="M-5,-10 Q -15, 2 0,15" style="stroke:#DF962E;stroke-width:4; fill:none">
+		
+		<animateTransform attributeName="transform" type="rotate(0,0)" 
+				values="0;360" repeatCount="indefinite" fill="freeze"/> 
+		</path>
+    </g>
+	
+	</svg>

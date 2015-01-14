@@ -1,0 +1,58 @@
+<svg id="svgindex" xmlns="http://www.w3.org/2000/svg"
+		xmlns:xlink="http://www.w3.org/1999/xlink" y="0" width="640" height="500">
+	<g id="myLogo">
+		<defs>
+			<path id="titlePath1" d="M 100 125 Q 320 -15 540 125" stroke="white" stroke-width="5" fill="none" />
+			<path id="titlePath2" d="M 100 300 Q 320 450 540 300 q10 -10 50 0" stroke="white" stroke-width="5" fill="none" />
+			<g id="spoon" transform="translate(180,250),rotate(-30)">  
+				<ellipse cx="0" cy="00" rx="15" ry="20" style="fill:#C87533;stroke-width:2"/>
+				<line x1="0" y1="0" x2="5" y2="130" style="stroke:#C87533;stroke-width:5;"/> 
+				<path d="M-5,-10 Q -15, 2 0,15" style="stroke:#DF962E;stroke-width:4; fill:none"/>
+			</g>
+		</defs>
+
+		<g transform="translate(0, 60)">
+			<g transform="translate(-50,-220), scale(1.02, 1)">
+				<use xlink:href="./logo_detail.svg#layer3"/>
+			</g>
+
+			<a xlink:href="#">
+				<text x="20" class="title">
+					<textPath  xlink:href="#titlePath1" >
+						The Copper Spoon
+					</textPath>
+				</text>
+			</a>
+			<ellipse cx="320" cy="200" rx="200" ry="120" style="stroke-width:2" transform="translate(2,4)"/>
+			<ellipse cx="320" cy="200" rx="200" ry="120" style="fill:#B1AC8F;stroke-width:2" />
+		</g>
+
+		<g>
+			<clipPath id="clipEllipse">  
+				<ellipse id="test" cx="425" cy="265" rx="380" ry="300"/>
+			</clipPath>
+		</g>
+
+
+
+		<use xlink:href="#spoon">
+			<animateTransform attributeName="transform" type="rotate" values="0,215,310;30,215,310;0,215,310" repeatCount="indefinite" fill="freeze" dur="2s"/> 
+		</use>
+
+		<g transform="translate(30,-16), scale(0.7)">
+			<use xlink:href="./logo.svg#path3012" clip-path="url(#clipEllipse)"/>
+			<use xlink:href="./logo.svg#path3868"/>
+			<use xlink:href="./logo.svg#layer3"/>
+			<use xlink:href="./logo.svg#layer4"/>
+		</g>
+
+		<g transform="translate(0, 60)">
+			<text x="10" class="subtitle">
+				<textPath  xlink:href="#titlePath2" >
+					Made for Tea..........And Biscuits
+				</textPath>
+			</text>
+		</g>
+	</g>
+
+</svg>

@@ -1,0 +1,47 @@
+Report - Nina Williams - The Project Marking Problem
+
+1. How you solved the problem of synchronizing the threads in your program.
+
+I used a single mutex and a single condition to synchronise the program. All threads share these. 
+There are several global variables that the threads communicate with:
+count (no. of markers available), sCount (no. of students finished), markerState[NMAR] (marker busy/idle), demoState[NSTU] (demo on/off), 
+stuMark[NMAR] (which marker(s) with which students), totalMarkers[NSTU] (no. of markers a student has grabbed).
+
+Using the condition variable, markers have to wait for: a. to be grabbed, b. for the demo to start, c. for the demo to finish. The students send the signal to 
+indicate a predicates value might have changed. 
+
+a. Predicate: markerState must be 1
+b. Predicate: demoState must become 1 
+c. Predicate: demoState must become 0
+
+Marker then sets it's state back to 0, increments count, and sends a signal to tell other threads that variables have changed.
+When a marker has finished all their jobs, count decrements, and markerState is set to -1 so no other students can grab them for a demo. 
+Condition: There must be enough time to do a demo, otherwise leave the room OR leave if all students have finished their demos
+
+The students have to wait for: a. enough markers to be idle. 
+a. Predicate: count >= K
+When they're free, grab the first K markers that are idle, set their states to busy, store studentID in stuMark, decrememnt count, 
+increment totalMarkers and then broadcast the changes. Once they have enough markers, start the demo (demoState = 1) then broadcast, 
+wait for time D, then set demoState = 0 and broadcast the change. Exit the lab and increment sCount.
+Condition: There must be enough time to do a demo, otherwise leave the room OR there are not enough markers left to do a demo (the markers have left due to timeout).
+
+2. Why you believe your method is correct or, if you don't, how it could be made correct.
+I have made the assumption that all students prefer certain markers over others; they will always grab marker 0 first, then marker 1 and so on if they are available. 
+The output trace is correct, and events occur in the correct order (safe), however in terms of progress, the program might not always serve requests within time T. 
+The program only waits for student threads to finsih; in theory by the time all the students have finished, all markers will have finished as well. I have included a delay
+to make sure the program doesn't finish before time T has been reached (when time T is reached it is assumed that anyone left in the demo room is 'kicked out'). 
+I think once the students have all finished and T is reached, then it's ok to 'kick' the markers out. 
+However, there are times when students enter the room just before timeout, and there aren't enough markers available so they wait. As they're waiting, timenow() > T-D, so any markers that
+do become available leave the demo room and the student is left without enough markers to do their demo. To fix this I've made it so that whilst the students wait, if there are no longer enough
+markers in the room (using mCount), then the students leave the room. I've found this creates the expected output trace, but a better way to do it could be to use another condition. To do this:
+while 'leave' is 0, there is enough time to do a demo. If leave = 1, then there is no more time to do a demo, so wake up all threads that are currently waiting, and they will see leave = 1, and they 
+will exit the room.  
+
+
+3. Why you believe your method is efficient or, if you don't, how it could be made efficient.
+Using Signal would be more efficient than using broadcast. Broadcast wakes up all threads waiting on that signal, when really you only want to wake up a select few. 
+However, since we need to wake up more than one thread broadcast is necessary. 
+Condition variables help to avoid busy waiting, which increases the overall efficiency. 
+Initially to help broadcast work more efficiently I used more mutexes/condition variables to be able to target each thread waiting more specifically, but then signals were getting lost and the program deadlocked,
+so I returned to using a single mutex/condition variable. In any case there's a balance to be struck between using a single mutex and using many. It takes time to lock and unlock a mutex, and the fewer mutexes the faster the program can run. 
+However, on the other hand, threads can spend a lot of time waiting to lock a single mutex which slows the program; using more mutexes means there'll be less waiting time overall. 
